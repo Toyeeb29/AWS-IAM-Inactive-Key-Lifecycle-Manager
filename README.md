@@ -19,10 +19,7 @@
 4. [Getting Started](#getting-started)
 5. [Usage & Flags](#usage--flags)
 6. [Sample Output](#sample-output)
-7. [Output & Compliance Mapping](#output--compliance-mapping)
-8. [Test Coverage](#test-coverage)
-9. [Dependencies](#dependencies)
-10. [Roadmap](#roadmap)
+8. [Disclaimer](#disclaimer)
 
 ---
 
@@ -72,8 +69,8 @@ inactive-key-rotation/
 ### Installation
 
 ```bash
-git clone https://github.com/<your-username>/inactive-key-rotation.git
-cd inactive-key-rotation
+git clone https://github.com/Toyeeb29/AWS-IAM-Inactive-Key-Lifecycle-Manager.git
+
 
 # Create and activate virtual environment
 python -m venv venv
@@ -89,10 +86,10 @@ pip install -r requirements.txt
 aws configure sso
 
 # Log in
-aws sso login --profile <your-profile>
+aws sso login --profile Toyeeb
 
 # Verify identity
-aws sts get-caller-identity --profile <your-profile>
+aws sts get-caller-identity --profile Toyeeb
 ```
 
 **Example verified output:**
@@ -193,55 +190,6 @@ NIST IA-4:             PARTIALLY_COMPLIANT
 | NIST SP 800-53 | IA-4 | Identifier management |
 
 Compliance rate is calculated as the percentage of keys meeting all age and activity policy thresholds. A rate of 100% indicates full control adherence.
-
----
-
-## Test Coverage
-
-Tests are written with `pytest` and `moto` for full AWS IAM mocking — no real AWS credentials required to run the suite.
-
-```bash
-pytest tests/ -v --cov=inactive_key_checker --cov-report=term-missing
-```
-
----
-
-## Dependencies
-
-Key packages from the verified environment:
-
-```
-boto3==1.40.38
-botocore==1.40.38
-moto==5.1.22
-pytest==8.4.2
-pytest-cov==7.1.0
-pytest-mock==3.15.1
-coverage==7.13.5
-python-dateutil==2.9.0.post0
-PyYAML==6.0.3
-```
-
-Install all dependencies:
-```bash
-pip install -r requirements.txt
-```
-
----
-
-## Roadmap
-
-- [x] IAM key discovery and risk scoring
-- [x] JSON + CSV compliance reports
-- [x] SOC 2 CC6.1 and NIST IA-4 control mapping
-- [x] Configurable age and inactivity thresholds
-- [ ] Automated key deactivation with `--dry-run` mode
-- [ ] Key rotation engine with audit logging
-- [ ] SNS / email alerting for high-risk findings
-- [ ] Slack webhook integration for real-time notifications
-- [ ] Multi-account support via AWS Organizations
-- [ ] Lambda + EventBridge scheduled enforcement
-- [ ] GitHub Actions CI pipeline for automated scans
 
 ---
 
