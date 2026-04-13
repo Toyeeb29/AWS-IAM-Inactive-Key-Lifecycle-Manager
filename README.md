@@ -1,358 +1,254 @@
-# Lab 2: Inactive Key Rotation Check
+# AWS IAM Inactive Key Lifecycle Manager
+
+> Automated access key risk assessment with SOC 2 & NIST IA-4 compliance reporting — built for GRC Engineering workflows.
+
+![Python](https://img.shields.io/badge/Python-3.13-blue?style=flat-square&logo=python)
+![boto3](https://img.shields.io/badge/boto3-1.40.38-orange?style=flat-square&logo=amazonaws)
+![SOC2](https://img.shields.io/badge/SOC_2-CC6.1-purple?style=flat-square)
+![NIST](https://img.shields.io/badge/NIST-IA--4-purple?style=flat-square)
+![moto](https://img.shields.io/badge/tested_with-moto_%26_pytest-green?style=flat-square)
+![License](https://img.shields.io/badge/license-MIT-lightgrey?style=flat-square)
+
+---
+
+## Table of Contents
+
+1. [Overview](#overview)
+2. [Features](#features)
+3. [Architecture](#architecture)
+4. [Getting Started](#getting-started)
+5. [Usage & Flags](#usage--flags)
+6. [Sample Output](#sample-output)
+7. [Output & Compliance Mapping](#output--compliance-mapping)
+8. [Test Coverage](#test-coverage)
+9. [Dependencies](#dependencies)
+10. [Roadmap](#roadmap)
+
+---
 
 ## Overview
 
-This lab teaches GRC engineers how to automate the detection of IAM access keys that are older than 90 days or unused. You'll build a comprehensive key lifecycle management tool that generates detailed remediation reports for compliance teams, with intelligent risk classification and actionable recommendations.
+IAM access keys are one of the most commonly misconfigured attack surfaces in AWS environments. This tool provides automated discovery, risk scoring, and compliance reporting for all IAM user access keys across an AWS account — enabling GRC, Security, and Cloud teams to maintain continuous visibility into key hygiene.
 
-## Why This Matters
+Designed to align with **SOC 2 CC6.1** (logical access controls) and **NIST SP 800-53 IA-4** (identifier management), this project demonstrates a repeatable, policy-driven approach to credential lifecycle management.
 
-Stale access keys represent a significant security risk and are a common finding in security audits. Auditors require evidence that organizations actively manage key rotation and deactivate unused credentials. This lab automates the identification of non-compliant keys and provides specific remediation guidance.
+---
 
-## Control Mapping
+## Features
 
-- **SOC 2 CC6.1** – Restriction of logical access
-- **NIST 800-53 IA-4** – Identifier management
+| Feature | Description |
+|---------|-------------|
+| **Full IAM key enumeration** | Scans all IAM users and retrieves key metadata, last-used timestamps, and creation dates via the AWS SDK |
+| **Configurable risk thresholds** | Classifies keys as Critical / High / Compliant based on age and inactivity — both thresholds are CLI-configurable |
+| **JSON + CSV reporting** | Generates machine-readable JSON and human-readable CSV reports for audit trail and ticketing workflows |
+| **Framework compliance mapping** | Maps each finding to SOC 2 CC6.1 and NIST IA-4 controls with a per-account compliance rate |
+| **AWS SSO support** | Authenticates via AWS SSO named profiles — no hardcoded credentials required |
 
-## Learning Objectives
+---
 
-By completing this lab, you will:
+## Architecture
 
-1. Query IAM for all users and their access keys programmatically
-2. Detect unused or stale keys based on configurable thresholds
-3. Classify keys by risk level with intelligent analysis
-4. Build comprehensive remediation reports with specific recommendations
-5. Understand key lifecycle management best practices for compliance
-
-## Prerequisites
-
-- AWS CLI configured with appropriate permissions
-- Python 3.9+ installed
-- Basic familiarity with AWS IAM and access keys
-- Understanding of virtual environments
-- Windsurf IDE (download at: https://windsurf.com/refer?referral_code=l8ckp786a0dhgm96)
-
-## Lab Setup Guide
-
-### Step 1: Download and Setup Lab Files
-
-1. **Download the lab files** from the provided ZIP archive
-2. **Extract the ZIP file** to a new folder on your local machine (e.g., `GRC_Labs`)
-3. **Open Windsurf IDE** and create a new workspace
-4. **Open the lab folder** in Windsurf IDE:
-   ```
-   File → Open Folder → Navigate to extracted folder → 
-   Select: lab-2-inactive-key-rotation
-   ```
-5. **Navigate to the lab directory** in your terminal:
-   ```bash
-   cd /path/to/your/extracted/folder/lab-2-inactive-key-rotation
-   ```
-
-### Step 2: Create and Activate Virtual Environment
-
-**Why use a virtual environment?**
-Virtual environments isolate Python dependencies, preventing conflicts between different projects and ensuring consistent, reproducible environments.
-
-```bash
-# Create virtual environment
-python3 -m venv venv
-
-# Activate virtual environment
-# On macOS/Linux:
-source venv/bin/activate
-
-# On Windows:
-# venv\Scripts\activate
-
-# Verify activation (you should see (venv) in your prompt)
-which python
+```
+inactive-key-rotation/
+├── inactive_key_checker.py           # Core scanner & risk engine
+├── inactive_key_analysis_report.json # Generated JSON compliance report
+├── inactive_key_summary.csv          # Generated CSV summary
+├── tests/
+│   └── test_inactive_key_checker.py
+├── requirements.txt
+└── README.md
 ```
 
-### Step 3: Install Dependencies
+---
+
+## Getting Started
+
+### Prerequisites
+
+- Python 3.9+
+- AWS CLI configured with SSO or static credentials
+- IAM permissions: `iam:ListUsers`, `iam:ListAccessKeys`, `iam:GetAccessKeyLastUsed`
+
+### Installation
 
 ```bash
-# Install required packages
-pip install boto3
+git clone https://github.com/<your-username>/inactive-key-rotation.git
+cd inactive-key-rotation
 
-# Verify installation
-pip list
+# Create and activate virtual environment
+python -m venv venv
+source venv/bin/activate        # Windows: venv\Scripts\activate
+
+pip install -r requirements.txt
 ```
 
-### Step 4: Configure AWS Authentication
+### AWS SSO Authentication
 
-Choose one of the following methods:
-
-#### Option A: AWS SSO/Identity Center (Recommended)
 ```bash
-# Configure SSO
+# Configure SSO profile
 aws configure sso
 
-# Test connection
-aws sts get-caller-identity --profile your-profile-name
+# Log in
+aws sso login --profile <your-profile>
+
+# Verify identity
+aws sts get-caller-identity --profile <your-profile>
 ```
 
-#### Option B: Traditional AWS CLI
-```bash
-# Configure credentials
-aws configure
-
-# Test connection
-aws sts get-caller-identity
-```
-
-## Required AWS Permissions
-
-Your AWS credentials need the following IAM permissions:
-
+**Example verified output:**
 ```json
 {
-    "Version": "2012-10-17",
-    "Statement": [
-        {
-            "Effect": "Allow",
-            "Action": [
-                "iam:ListUsers",
-                "iam:ListAccessKeys",
-                "iam:GetAccessKeyLastUsed",
-                "iam:GetLoginProfile"
-            ],
-            "Resource": "*"
-        }
-    ]
+    "UserId": "AROAWWXFC3ZSPMC6KMBJB:Toyeeb",
+    "Account": "461115678308",
+    "Arn": "arn:aws:sts::461115678308:assumed-role/AWSReservedSSO_sso-t_7b5f64a31f3931a4/Toyeeb"
 }
 ```
 
-## Running the Lab
+---
 
-### Basic Usage
-
-```bash
-# Activate virtual environment (if not already active)
-source venv/bin/activate
-
-# Run with default credentials and thresholds
-python inactive_key_checker.py
-
-# Run with specific AWS profile
-python inactive_key_checker.py --profile your-profile-name
-
-# Run with custom thresholds
-python inactive_key_checker.py --profile your-profile-name --key-age-threshold 60 --last-used-threshold 30
-```
-
-### Command Line Options
+## Usage & Flags
 
 ```bash
-python inactive_key_checker.py --help
+python inactive_key_checker.py --profile <profile> [OPTIONS]
 ```
 
-**Available options:**
-- `--profile`: AWS profile name for authentication
-- `--region`: AWS region (default: us-east-1)
-- `--key-age-threshold`: Maximum key age in days (default: 90)
-- `--last-used-threshold`: Maximum days since last use (default: 90)
-- `--output-dir`: Directory for output files (default: current directory)
+| Flag | Description | Default |
+|------|-------------|---------|
+| `--profile` | AWS named profile (SSO or credentials file) | Required |
+| `--key-age-threshold` | Days before a key is considered aged | `90` |
+| `--last-used-threshold` | Days since last use before flagging inactive | `45` |
 
-## Understanding the Results
+**Output files generated:**
+- `inactive_key_analysis_report.json` — full JSON findings
+- `inactive_key_summary.csv` — human-readable summary for audit tickets
 
-### Risk Classification System
+**Basic scan:**
+```bash
+python inactive_key_checker.py --profile Toyeeb
+```
 
-The script uses intelligent risk classification:
+**Scan with custom thresholds:**
+```bash
+python inactive_key_checker.py --profile Toyeeb --key-age-threshold 60 --last-used-threshold 30
+```
 
-**CRITICAL Risk:**
-- Keys >180 days old and never used
-- Keys unused for >120 days
+---
 
-**HIGH Risk:**
-- Keys >90 days old and never used
-- Keys unused for >90 days
-
-**MEDIUM Risk:**
-- Keys >60 days old
-- Keys unused for >60 days
-
-**LOW Risk:**
-- Keys >30 days old but recently used
-
-**COMPLIANT:**
-- Recent keys with active usage
-
-### Sample Output
+## Sample Output
 
 ```
+🚀 Starting AWS Access Key Lifecycle Assessment
+============================================================
+🔐 Initializing AWS session with profile: Toyeeb
+✅ Successfully connected to AWS Account: 461115678308
+🔍 Starting comprehensive access key analysis...
+👥 Retrieving all IAM users...
+✅ Found 3 IAM users
+
 📊 Analysis complete:
-  - Total users: 5
-  - Users with keys: 5
-  - Total keys: 6
-  - Critical risk: 1
-  - High risk: 0
-  - Compliance rate: 16.67%
+  - Total users: 3
+  - Users with keys: 2
+  - Total keys: 3
+  - Critical risk: 0
+  - High risk: 2
+  - Compliance rate: 0.0%
+
+📋 Generating compliance reports...
+📄 JSON report saved: inactive_key_analysis_report.json
+📊 CSV report saved: inactive_key_summary.csv
+
+============================================================
+📊 ASSESSMENT SUMMARY
+============================================================
+Account ID:            461115678308
+Total Users:           3
+Total Access Keys:     3
+Critical Risk Keys:    0
+High Risk Keys:        2
+Never Used Keys:       2
+Compliance Rate:       0.0%
+Overall Status:        PARTIALLY_COMPLIANT
+SOC 2 CC6.1:           PARTIALLY_COMPLIANT
+NIST IA-4:             PARTIALLY_COMPLIANT
+⚠️  Access key management requires attention
 ```
 
-## Generated Reports
+---
 
-The script produces two comprehensive files:
+## Output & Compliance Mapping
 
-### 1. JSON Report (`inactive_key_analysis_report.json`)
-Detailed technical report including:
-- Complete key analysis for each user
-- Risk classifications with justifications
-- Last used service and region information
-- Compliance assessment against SOC 2 and NIST standards
+### Risk Classification
 
-### 2. CSV Summary (`inactive_key_summary.csv`)
-Audit-ready summary with:
-- Executive summary statistics
-- High-risk findings requiring immediate attention
-- Prioritized recommendations for security teams
-- Actionable remediation steps
+| Level | Criteria |
+|-------|----------|
+| 🔴 **Critical** | Key age > 180 days and never used |
+| 🟡 **High** | Key age exceeds threshold OR unused beyond inactivity threshold |
+| 🟢 **Compliant** | Active key within all policy thresholds |
 
-## Testing the Lab
+### Compliance Controls
 
-### Test with Your AWS Account
-```bash
-python inactive_key_checker.py --profile your-profile-name
-```
+| Framework | Control | Description |
+|-----------|---------|-------------|
+| SOC 2 | CC6.1 | Logical and physical access controls |
+| NIST SP 800-53 | IA-4 | Identifier management |
 
-### Create Test Scenario (Optional)
-```bash
-# Create test user with access key
-aws iam create-user --user-name test-key-user --profile your-profile-name
+Compliance rate is calculated as the percentage of keys meeting all age and activity policy thresholds. A rate of 100% indicates full control adherence.
 
-# Create access key
-aws iam create-access-key --user-name test-key-user --profile your-profile-name
+---
 
-# Re-run assessment to see new key
-python inactive_key_checker.py --profile your-profile-name
+## Test Coverage
 
-# Clean up test resources
-aws iam delete-access-key --user-name test-key-user --access-key-id AKIA... --profile your-profile-name
-aws iam delete-user --user-name test-key-user --profile your-profile-name
-```
-
-## Success Criteria
-
-- [ ] Virtual environment created and activated successfully
-- [ ] Dependencies installed without conflicts
-- [ ] Script connects to AWS account successfully
-- [ ] All IAM users and access keys retrieved
-- [ ] Risk classification applied correctly
-- [ ] Last used dates analyzed accurately
-- [ ] Reports generated in required formats
-- [ ] Recommendations are actionable and prioritized
-
-## Troubleshooting
-
-### Virtual Environment Issues
-```bash
-# If activation fails
-which python3
-python3 -m venv --help
-
-# If pip install fails
-pip install --upgrade pip
-pip install boto3 --verbose
-```
-
-### AWS Authentication Issues
-```bash
-# Check AWS configuration
-aws configure list
-aws sts get-caller-identity
-
-# For SSO profiles
-aws sso login --profile your-profile-name
-```
-
-### Permission Issues
-```bash
-# Test specific permissions
-aws iam list-users --max-items 1 --profile your-profile-name
-aws iam list-access-keys --user-name your-username --profile your-profile-name
-```
-
-### Common Error Messages
-
-**"No module named 'boto3'"**
-- Ensure virtual environment is activated
-- Run `pip install boto3`
-
-**"Profile not found"**
-- Check profile name: `aws configure list-profiles`
-- Verify SSO login: `aws sso login --profile profile-name`
-
-**"Access denied"**
-- Verify IAM permissions listed above
-- Check if you're using the correct AWS account
-
-**"Rate limiting"**
-- Script includes built-in handling for large accounts
-- Consider running during off-peak hours for very large environments
-
-## Compliance Interpretation
-
-### For Auditors
-
-**Key Findings to Review:**
-- **Critical Risk Keys**: Require immediate rotation or deletion
-- **Never Used Keys**: May indicate over-provisioning or forgotten test accounts
-- **Compliance Rate**: Overall percentage of compliant keys
-- **User Patterns**: Identify users with multiple old keys
-
-**Evidence Documentation:**
-- JSON report provides complete technical details
-- CSV summary offers executive-level metrics
-- Recommendations include specific remediation steps
-- Timestamps ensure audit trail accuracy
-
-### Risk Prioritization
-
-1. **Immediate Action** (Critical/High): Keys requiring rotation within 7 days
-2. **Planned Remediation** (Medium): Keys requiring attention within 30 days
-3. **Monitoring** (Low): Keys to watch for future rotation cycles
-4. **Compliant**: Keys meeting current standards
-
-## Advanced Features
-
-The script includes several advanced capabilities:
-
-- **Console Access Detection**: Identifies users with both programmatic and console access
-- **Service Usage Tracking**: Shows which AWS services last used each key
-- **Regional Analysis**: Identifies where keys were last used geographically
-- **Never-Used Key Detection**: Flags keys that have never been utilized
-- **Configurable Thresholds**: Allows customization for different compliance requirements
-
-## Next Steps
-
-After completing this lab:
-
-1. **Review Critical Findings**: Address any critical or high-risk keys immediately
-2. **Establish Rotation Procedures**: Create processes for regular key rotation
-3. **Implement Monitoring**: Schedule regular assessments (monthly recommended)
-4. **Document Exceptions**: Create justifications for any keys that cannot be rotated
-5. **Proceed to Lab 3**: Continue with Logging and Monitoring Validation
-6. **Automate Remediation**: Consider implementing automated key rotation for service accounts
-
-## Real-World Application
-
-This lab addresses common audit questions:
-- "How do you ensure access keys are rotated regularly?"
-- "What controls prevent the use of stale credentials?"
-- "Can you demonstrate proactive key lifecycle management?"
-
-The generated reports provide concrete evidence of key management practices and identify specific remediation actions, making them ideal for compliance documentation and security team workflows.
-
-## Cleanup
-
-When finished with the lab:
+Tests are written with `pytest` and `moto` for full AWS IAM mocking — no real AWS credentials required to run the suite.
 
 ```bash
-# Deactivate virtual environment
-deactivate
-
-# Optional: Remove virtual environment
-rm -rf venv
-
-# Keep generated reports for audit evidence
-ls *.json *.csv
+pytest tests/ -v --cov=inactive_key_checker --cov-report=term-missing
 ```
+
+---
+
+## Dependencies
+
+Key packages from the verified environment:
+
+```
+boto3==1.40.38
+botocore==1.40.38
+moto==5.1.22
+pytest==8.4.2
+pytest-cov==7.1.0
+pytest-mock==3.15.1
+coverage==7.13.5
+python-dateutil==2.9.0.post0
+PyYAML==6.0.3
+```
+
+Install all dependencies:
+```bash
+pip install -r requirements.txt
+```
+
+---
+
+## Roadmap
+
+- [x] IAM key discovery and risk scoring
+- [x] JSON + CSV compliance reports
+- [x] SOC 2 CC6.1 and NIST IA-4 control mapping
+- [x] Configurable age and inactivity thresholds
+- [ ] Automated key deactivation with `--dry-run` mode
+- [ ] Key rotation engine with audit logging
+- [ ] SNS / email alerting for high-risk findings
+- [ ] Slack webhook integration for real-time notifications
+- [ ] Multi-account support via AWS Organizations
+- [ ] Lambda + EventBridge scheduled enforcement
+- [ ] GitHub Actions CI pipeline for automated scans
+
+---
+
+## Disclaimer
+
+This project is built for educational and GRC portfolio purposes. Always validate findings against your organization's access key policies before taking any remediation action.
+
+---
+
+*Built as part of a GRC Engineering lab series.*
