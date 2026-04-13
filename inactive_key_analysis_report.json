@@ -1,0 +1,147 @@
+{
+  "metadata": {
+    "report_type": "AWS Access Key Lifecycle Assessment",
+    "account_id": "461115678308",
+    "assessment_date": "2026-04-13T14:35:03.053964+00:00",
+    "aws_region": "us-east-1",
+    "aws_profile": "Toyeeb",
+    "tool_version": "1.0",
+    "thresholds": {
+      "key_age_threshold_days": 60,
+      "last_used_threshold_days": 30
+    },
+    "standards_evaluated": [
+      "SOC 2 CC6.1",
+      "NIST 800-53 IA-4"
+    ]
+  },
+  "analysis_results": {
+    "summary": {
+      "total_users": 3,
+      "users_with_keys": 2,
+      "total_keys": 3,
+      "critical_keys": 0,
+      "high_risk_keys": 2,
+      "medium_risk_keys": 1,
+      "low_risk_keys": 0,
+      "compliant_keys": 0,
+      "never_used_keys": 2,
+      "compliance_rate": 0.0
+    },
+    "user_analysis": [
+      {
+        "username": "fikayo",
+        "user_created": "2026-01-06T03:40:30+00:00",
+        "has_console_access": false,
+        "access_keys": [
+          {
+            "access_key_id": "AKIAWWXFC3ZSC6YCF6EA",
+            "status": "Active",
+            "created_date": "2026-01-06T03:42:20+00:00",
+            "age_days": 97,
+            "last_used_date": null,
+            "days_since_last_used": null,
+            "never_used": true,
+            "last_used_service": null,
+            "last_used_region": null,
+            "risk_level": "HIGH",
+            "recommendation": "Delete or activate key (created 97 days ago, never used)"
+          },
+          {
+            "access_key_id": "AKIAWWXFC3ZSEELS7QFE",
+            "status": "Active",
+            "created_date": "2026-01-06T03:43:54+00:00",
+            "age_days": 97,
+            "last_used_date": null,
+            "days_since_last_used": null,
+            "never_used": true,
+            "last_used_service": null,
+            "last_used_region": null,
+            "risk_level": "HIGH",
+            "recommendation": "Delete or activate key (created 97 days ago, never used)"
+          }
+        ],
+        "key_count": 2,
+        "highest_risk_level": "HIGH"
+      },
+      {
+        "username": "Imran",
+        "user_created": "2025-09-17T16:45:16+00:00",
+        "has_console_access": true,
+        "access_keys": [
+          {
+            "access_key_id": "AKIAWWXFC3ZSJUKAKK5K",
+            "status": "Active",
+            "created_date": "2026-01-11T02:40:07+00:00",
+            "age_days": 92,
+            "last_used_date": "2026-04-09T19:22:00+00:00",
+            "days_since_last_used": 3,
+            "never_used": false,
+            "last_used_service": "lambda",
+            "last_used_region": "us-east-1",
+            "risk_level": "MEDIUM",
+            "recommendation": "Plan key rotation within 30 days (age: 92 days)"
+          }
+        ],
+        "key_count": 1,
+        "highest_risk_level": "MEDIUM"
+      },
+      {
+        "username": "test-console-user",
+        "user_created": "2026-04-08T15:35:37+00:00",
+        "has_console_access": true,
+        "access_keys": [],
+        "key_count": 0,
+        "highest_risk_level": "NO_KEYS"
+      }
+    ],
+    "high_risk_findings": [
+      {
+        "username": "fikayo",
+        "access_key_id": "AKIAWWXFC3ZSC6YCF6EA",
+        "risk_level": "HIGH",
+        "age_days": 97,
+        "days_since_last_used": null,
+        "never_used": true,
+        "recommendation": "Delete or activate key (created 97 days ago, never used)"
+      },
+      {
+        "username": "fikayo",
+        "access_key_id": "AKIAWWXFC3ZSEELS7QFE",
+        "risk_level": "HIGH",
+        "age_days": 97,
+        "days_since_last_used": null,
+        "never_used": true,
+        "recommendation": "Delete or activate key (created 97 days ago, never used)"
+      }
+    ],
+    "recommendations": [
+      {
+        "priority": "HIGH",
+        "username": "fikayo",
+        "access_key_id": "AKIAWWXFC3ZSC6YCF6EA",
+        "issue": "Key is high risk",
+        "recommendation": "Delete or activate key (created 97 days ago, never used)"
+      },
+      {
+        "priority": "HIGH",
+        "username": "fikayo",
+        "access_key_id": "AKIAWWXFC3ZSEELS7QFE",
+        "issue": "Key is high risk",
+        "recommendation": "Delete or activate key (created 97 days ago, never used)"
+      },
+      {
+        "priority": "MEDIUM",
+        "username": "Imran",
+        "access_key_id": "AKIAWWXFC3ZSJUKAKK5K",
+        "issue": "Key is medium risk",
+        "recommendation": "Plan key rotation within 30 days (age: 92 days)"
+      }
+    ]
+  },
+  "compliance_assessment": {
+    "overall_status": "PARTIALLY_COMPLIANT",
+    "soc2_cc6_1_status": "PARTIALLY_COMPLIANT",
+    "nist_ia_4_status": "PARTIALLY_COMPLIANT"
+  }
+}

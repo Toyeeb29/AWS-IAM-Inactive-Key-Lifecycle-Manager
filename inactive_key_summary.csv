@@ -1,0 +1,25 @@
+AWS Access Key Lifecycle Assessment Summary
+Account ID,461115678308
+Assessment Date,2026-04-13 14:35:03 UTC
+Compliance Rate,0.0%
+
+Summary Statistics
+Metric,Count
+Total Users,3
+Users with Keys,2
+Total Keys,3
+Critical Risk Keys,0
+High Risk Keys,2
+Medium Risk Keys,1
+Never Used Keys,2
+
+High-Risk Access Keys Requiring Immediate Attention
+Username,Access Key ID,Risk Level,Age (Days),Days Since Last Used,Never Used,Recommendation
+fikayo,AKIAWWXFC3ZSC6YCF6EA,HIGH,97,N/A,Yes,"Delete or activate key (created 97 days ago, never used)"
+fikayo,AKIAWWXFC3ZSEELS7QFE,HIGH,97,N/A,Yes,"Delete or activate key (created 97 days ago, never used)"
+
+All Recommendations by Priority
+Priority,Username,Access Key ID,Issue,Recommendation
+HIGH,fikayo,AKIAWWXFC3ZSC6YCF6EA,Key is high risk,"Delete or activate key (created 97 days ago, never used)"
+HIGH,fikayo,AKIAWWXFC3ZSEELS7QFE,Key is high risk,"Delete or activate key (created 97 days ago, never used)"
+MEDIUM,Imran,AKIAWWXFC3ZSJUKAKK5K,Key is medium risk,Plan key rotation within 30 days (age: 92 days)
