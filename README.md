@@ -62,7 +62,7 @@ inactive-key-rotation/
 
 ### Prerequisites
 
-- Python 3.9+
+- Python 3.13
 - AWS CLI configured with SSO or static credentials
 - IAM permissions: `iam:ListUsers`, `iam:ListAccessKeys`, `iam:GetAccessKeyLastUsed`
 
